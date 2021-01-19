@@ -1,2 +1,4 @@
 /Advisors
 /Examples
+*.log
+.DS_Store
