@@ -2,3 +2,4 @@
 /Examples
 *.log
 .DS_Store
+/.vscode

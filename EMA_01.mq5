@@ -27,118 +27,16 @@ double trailing_stop_value;
 
 
 int OnInit(){
-   setArraysAsSeries();    // Set data arrays as series
-   initIndicators();       // Init indicators
-   checkBrokerDigits();    // To account for brokers that use 5 digits
+   Print("Init started");
    return(INIT_SUCCEEDED);
 }
 
 void OnDeinit(const int reason){
-   releaseIndicators();    // Release indicators
+  
 }
 
 void OnTick(){
-   static datetime timestamp;
-   datetime time = iTime(_Symbol,PERIOD_CURRENT,0);
    
-   // Get current price data
-   currentAsk = SymbolInfoDouble(_Symbol,SYMBOL_ASK);
-   currentBid = SymbolInfoDouble(_Symbol,SYMBOL_BID);
-   
-   copyBuffers();
-   copyData();
-   //calculateSLTPPips(); // Gave errors, took too long to debug
-   
-   // Update candle array with previous candle data - OHLC
-   candles[0][1] = iHigh(_Symbol,PERIOD_CURRENT,1);   // Previous High
-   candles[0][2] = iLow(_Symbol,PERIOD_CURRENT,1);    // Previous Low
-   candles[0][3] = iClose(_Symbol,PERIOD_CURRENT,1);  // Previous Close
-   candles[1][3] = iClose(_Symbol,PERIOD_CURRENT,2);  // Previous-1 Close
-   
-   // Only run this code once a candle
-   if(timestamp != time){
-      timestamp = time;
-      
-      // Get calculated stats for indicators
-      int bb = getBB();
-      int macd = getMACD();
-      int mfi = getMFI();
-      
-      //---- Exit Trade Rules
-      if(PositionSelect(_Symbol) == true){
-   
-      double freeMargin = AccountInfoDouble(ACCOUNT_MARGIN_FREE);
-      Print("--------Free Margin: ",freeMargin);
-   
-      //-- Exit Long Trade
-   
-      //-- Exit Short Trade
-   
-      }
-   
-      //---- Enter Trade Rules
-      if(PositionSelect(_Symbol) == false){
-   
-         //-- Enter Long Trade
-         if(bb==1 
-            && macd==1 
-           // && mfi==1
-           ){
-            makeTrade("buy");
-         }
-   
-         //-- Enter Short Trade
-         if(bb==2 
-            && macd==2 
-          //  && mfi==1
-          ){
-            makeTrade("sell");
-         }
-      }
-      
-   }
-   
-   // Trailing stop loss
-   if(trailingsl>0 && PositionSelect(_Symbol)==true){
-      ENUM_POSITION_TYPE positionType = PositionGetInteger(POSITION_TYPE);
-      double openPrice = PositionGetDouble(POSITION_PRICE_OPEN);
-      double currentSL = PositionGetDouble(POSITION_SL);
-      double localSL;
-      double tlStop = (double) trailingsl * _Point * P;
-   
-      if(positionType==POSITION_TYPE_BUY){
-         if(currentBid-openPrice>tlStop){
-            localSL = NormalizeDouble(currentBid-tlStop,Digits());
-            if(currentSL<localSL){
-               trade.PositionModify(_Symbol,localSL,tpLevel);
-               if(trade.ResultRetcode()==10008 || trade.ResultRetcode()==10009){
-                  // Success
-               }
-               else{
-                  Print("-------Stop Loss updating failed. Error: ", GetLastError());
-                  ResetLastError();
-                  return;
-               }
-            }
-         }
-      }
-      else if(positionType==POSITION_TYPE_SELL){
-         if(openPrice-currentAsk>tlStop){
-            localSL = NormalizeDouble(currentAsk+tlStop,Digits());
-            if(currentSL>localSL){
-               trade.PositionModify(_Symbol,localSL,tpLevel);
-               if(trade.ResultRetcode()==10008 || trade.ResultRetcode()==10009){
-                  // Success
-               }
-               else{
-                  Print("-------Stop Loss updating failed. Error: ", GetLastError());
-                  ResetLastError();
-                  return;
-               }
-            }
-         }
-      }
-   }
 }
 
 
