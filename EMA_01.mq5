@@ -57,6 +57,8 @@ void OnTick(){
 
       //Print("- - - - - - - - - - - - - -");
       checkMACrossover();
+      //Print(ema6Data[1]);
+      //Print(ema6Data[2]);
       //Print("- - - - - - - - - - - - - -");
    }
 }
@@ -72,12 +74,13 @@ Strategy code below
 // Return 1/2 dpending on which is above at what point
 void checkMACrossover(){
 //   Print(ArraySize(ema6Data));
-if(ArraySize(ema6Data)>5 && ArraySize(sma12Data)>5){
-   string calc0 = calcFastOverSlow(ema6Data[0],sma12Data[0]);
-   string calc1 = calcFastOverSlow(ema6Data[1],sma12Data[1]);
+//if(ArraySize(ema6Data)>5 && ArraySize(sma12Data)>5){
+   string calc0 = calcFastOverSlow(ema6Data[1],sma12Data[1]);
+   string calc1 = calcFastOverSlow(ema6Data[2],sma12Data[2]);
    
    if(calc0=="bear" && calc1=="bull"){
       Print("- - - - - - - - ");
+      Print(calc0);
       Print("SELL SIGNAL");
       Print("- - - - - - - - ");
    }
@@ -88,7 +91,7 @@ if(ArraySize(ema6Data)>5 && ArraySize(sma12Data)>5){
       Print("- - - - - - - - ");
    }
    
-}
+//}
 }
 
 // Check Gradients - flat=consolidation
@@ -102,7 +105,7 @@ void checkMACDStatus(){}
 
 
 string calcFastOverSlow(double fast, double slow){
-   if(fast>slow){
+   if((fast-slow)>0){
       return "bull";
    }
    else{
