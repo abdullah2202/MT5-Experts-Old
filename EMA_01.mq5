@@ -5,7 +5,7 @@
    Input variables - Accessible from MT5
  * * * * * * * * * * * * * * * * * * * * */
 input double lot = 1.0;                            // Lot Size
-input int slpip = 30;                              // Stop Loss Pips
+input int slpip = 20;                              // Stop Loss Pips
 input int tppip = 75;                              // Take Profit Pips
 input int trailingsl = 25;                         // Trailing SL points
 
@@ -16,17 +16,18 @@ double pipValue;
  * * * * * * * * * * * * * * * * * * * * */
 CTrade trade;
 
-
+double currentBid, currentAsk;
 double ema6Data[], sma12Data[];
 int ema6Handle, sma12Handle;
 int numEma6, numSma12;
-
+int numTrades = 0;
 
 int OnInit(){
    // Print("Init started");
 
    // Set As Series
    ArraySetAsSeries(ema6Data,true);
+   ArraySetAsSeries(sma12Data,true);
 
    // Init Indicators
    initIndicators();
@@ -46,6 +47,10 @@ void OnTick(){
    static datetime timestamp;
    datetime time = iTime(_Symbol,PERIOD_CURRENT,0);
 
+   currentAsk = SymbolInfoDouble(_SYMBOL, SYMBOL_ASK);
+   currentBid = SymbolInfoDouble(_SYMBOL, SYMBOL_BID);
+
+
    // Copy Buffers
    copyBuffers();
 
@@ -55,11 +60,7 @@ void OnTick(){
    if(timestamp != time){
       timestamp = time;
 
-      //Print("- - - - - - - - - - - - - -");
       checkMACrossover();
-      //Print(ema6Data[1]);
-      //Print(ema6Data[2]);
-      //Print("- - - - - - - - - - - - - -");
    }
 }
 
@@ -73,21 +74,23 @@ Strategy code below
 // Test EMA arrays as print
 // Return 1/2 dpending on which is above at what point
 void checkMACrossover(){
-//   Print(ArraySize(ema6Data));
-//if(ArraySize(ema6Data)>5 && ArraySize(sma12Data)>5){
+
    string calc0 = calcFastOverSlow(ema6Data[1],sma12Data[1]);
    string calc1 = calcFastOverSlow(ema6Data[2],sma12Data[2]);
    
    if(calc0=="bear" && calc1=="bull"){
+      numTrades++;
       Print("- - - - - - - - ");
-      Print(calc0);
       Print("SELL SIGNAL");
+      Print("Num Trades: " + (string) numTrades);
       Print("- - - - - - - - ");
    }
 
    if(calc0=="bull" && calc1=="bear"){
+      numTrades++;
       Print("- - - - - - - - ");
       Print("BUY SIGNAL");
+      Print("Num Trades: " + (string) numTrades);
       Print("- - - - - - - - ");
    }
    
@@ -135,7 +138,7 @@ void setArrayAsSeries(){
  */
 void initIndicators(){
    ema6Handle = iMA(_Symbol,PERIOD_CURRENT,6,0,MODE_EMA,PRICE_CLOSE);
-   sma12Handle = iMA(_Symbol,PERIOD_CURRENT,12,0,MODE_SMA,PRICE_CLOSE);
+   sma12Handle = iMA(_Symbol,PERIOD_CURRENT,12,0,MODE_EMA,PRICE_CLOSE);
 }
 
 /**
@@ -164,4 +167,12 @@ double getPipValue(){
    else{
       return 0.01;
    }
+}
+
+void makeTrade(string type){
+
+   if(type=="buy"){
+      
+   }
+
 }
