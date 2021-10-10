@@ -4,7 +4,7 @@
 /* * * * * * * * * * * * * * * * * * * * *
    Input variables - Accessible from MT5
  * * * * * * * * * * * * * * * * * * * * */
-input double lot = 0.5;                            // Lot Size
+input double lot = 0.1;                            // Lot Size
 
 double pipValue;
 
@@ -74,14 +74,18 @@ void OnTick(){
         // Print("EMA:" + (string) emaData[1]);
         // Print(iClose(_Symbol,PERIOD_CURRENT,1));
         
-        Print("ATR: " + (string) getATR());
+        
+        //Print("SL: " + (string) calcBSL());
+        //Print("ATR: " + (string) getATR());
 
         if(checkForBearEngulfing()){
             //Print("Bearish Engulfing");
+            makeTrade("sell");
             numTrades++;
         }
         else if(checkForBullEngulfing()){
             //Print("Bullish Engulfing");
+            makeTrade("buy");
             numTrades++;
         }
 
@@ -138,6 +142,7 @@ bool checkForBullEngulfing(){
     can6 = iClose(_Symbol, PERIOD_CURRENT,6);
 
     if(
+        can6>can5 &&
         can5>can4 &&
         can4>can3 &&
         can3>can2 &&
@@ -151,20 +156,21 @@ bool checkForBullEngulfing(){
 
 double calcBSL(){
     double sizeOfCandle;
-    double atr2 = atr*2;
+    double atr2 = getATR()*2;
     double sl;
     sizeOfCandle = iHigh(_Symbol, PERIOD_CURRENT, 1) - iLow(_Symbol, PERIOD_CURRENT, 1);
     if(sizeOfCandle>atr2){
-        sl = iClose(_Symbol, PERIOD_CURRENT,1) - (atr*1.5);
+        //sl = iClose(_Symbol, PERIOD_CURRENT,1) - (getATR()*1.5);
+        sl = iLow(_Symbol, PERIOD_CURRENT, 1) - getATR();
     }
     else{
-        sl = iLow(_Symbol, PERIOD_CURRENT, 1) - atr;
+        sl = iLow(_Symbol, PERIOD_CURRENT, 1) - getATR();
     }
     return sl;
 }
 
-void calcBTP(){
-    double atr2 = atr*2;
+double calcBTP(){
+    double atr2 = getATR()*2;
     double tp;
     tp = iHigh(_Symbol, PERIOD_CURRENT, 1) + atr2;
     return tp;
@@ -172,14 +178,15 @@ void calcBTP(){
 
 double calcSSL(){
     double sizeOfCandle;
-    double atr2 = atr*2;
+    double atr2 = getATR()*2;
     double sl;
     sizeOfCandle = iHigh(_Symbol, PERIOD_CURRENT, 1) - iLow(_Symbol, PERIOD_CURRENT, 1);
     if(sizeOfCandle>atr2){
-        sl = iClose(_Symbol, PERIOD_CURRENT, 1) + (atr*1.5);
+        //sl = iClose(_Symbol, PERIOD_CURRENT, 1) + (getATR()*1.5);
+        sl = iLow(_Symbol, PERIOD_CURRENT, 1) + getATR();
     }
     else{
-        sl = iLow(_Symbol, PERIOD_CURRENT, 1) + atr;
+        sl = iLow(_Symbol, PERIOD_CURRENT, 1) + getATR();
     }
     return sl;
 }
@@ -187,8 +194,8 @@ double calcSSL(){
 /**
  * Calculate TP for Sells
  */
-void calcSTP(){
-    double atr2 = atr*2;
+double calcSTP(){
+    double atr2 = getATR()*2;
     double tp;
     tp = iLow(_Symbol, PERIOD_CURRENT, 1) - atr2;
     return tp;
@@ -208,7 +215,7 @@ double getATR(){
 
     result = total / atr;
     //result = result / pipValue;
-    result = NormalizeDouble(result, 1);
+    result = NormalizeDouble(result, 3);
     return result;
 }
 
@@ -262,8 +269,8 @@ double getPipValue(){
 void makeTrade(string type){
 
    if(type=="buy"){
-      double slLevel = currentAsk - (slpip * pipValue);
-      double tpLevel = currentAsk + (slpip * pipValue);
+      double slLevel = calcBSL();
+      double tpLevel = calcBTP();
       trade.PositionOpen(_Symbol, ORDER_TYPE_BUY,lot,currentAsk,slLevel,tpLevel, "Buy Trade. Magic Number: " + (string) trade.RequestMagic());
 
       if(trade.ResultRetcode()==10008 || trade.ResultRetcode()==10009){
@@ -276,8 +283,8 @@ void makeTrade(string type){
       }   
    }
    if(type=="sell"){
-      double slLevel = currentBid + (slpip * pipValue);
-      double tpLevel = currentBid - (tppip * pipValue);
+      double slLevel = calcSSL();
+      double tpLevel = calcSTP();
       trade.PositionOpen(_Symbol,ORDER_TYPE_SELL,lot,currentBid,slLevel,tpLevel,"Sell Trade. Magic Number: " + (string) trade.RequestMagic());
    
       if(trade.ResultRetcode()==10008 || trade.ResultRetcode()==10009){
