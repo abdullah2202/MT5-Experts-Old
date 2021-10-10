@@ -11,6 +11,7 @@ double pipValue;
 double tppip = 10;
 double slpip = 10;
 int atr = 14;
+int ATRTP = 1;
 
 /* * * * * * * * * * * * * * * * * * * * *
  Service Variables - Only Accessible in code
@@ -22,16 +23,12 @@ double reqData[], atrReq[];
 
 int numTrades = 0;
 int numOpenTrades = 0;
+int openPositions = 0;
 
+string engulfResult = "";
 
 int OnInit(){
    // Print("Init started");
-
-   // Set As Series
-   //ArraySetAsSeries(emaData,true);
-
-   // Init Indicators
-   //initIndicators();
 
    // Check Digits - Get value of one Pip
    pipValue = getPipValue();
@@ -40,64 +37,120 @@ int OnInit(){
 }
 
 void OnDeinit(const int reason){
-   // Releaee Indicators
-   releaseIndicators();
    Print("Num Trades: " + (string) numTrades);
 }
 
 void OnTick(){
-   // Sort out Date and Time
-   static datetime timestamp;
-   datetime time = iTime(_Symbol,PERIOD_CURRENT,0);
-   
-   // Get current ASK and BID
-   currentAsk = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
-   currentBid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+    // Sort out Date and Time
+    static datetime timestamp;
+    datetime time = iTime(_Symbol,PERIOD_CURRENT,0);
+    
+    // Get current ASK and BID
+    currentAsk = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
+    currentBid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
 
-   // Work out current spread
-   currentSpread = (currentBid - currentAsk) / pipValue;
+    // Work out current spread
+    currentSpread = (currentBid - currentAsk) / pipValue;
 
-   // Copy Buffers
-   //copyBuffers();
+    openPositions = PositionsTotal();
 
-   // Copy Data
+    // Run this code once per candle
+    if(timestamp != time){
+        timestamp = time;
 
-   // Run this code once per candle
-   if(timestamp != time){
-      timestamp = time;
-
-
-      // If no trades are open
-      if(numOpenTrades<1){
-
-        // Print("Spread: " + (string) currentSpread);
-        // Print("EMA:" + (string) emaData[1]);
-        // Print(iClose(_Symbol,PERIOD_CURRENT,1));
-        
+        // Print("Positions: " + (string) PositionsTotal());
         
         //Print("SL: " + (string) calcBSL());
         //Print("ATR: " + (string) getATR());
 
-        if(checkForBearEngulfing()){
+        engulfResult = checkForEngulfing();
+        //Print("Engulf Result: " + engulfResult);
+
+        if(engulfResult == "bearish"){
             //Print("Bearish Engulfing");
             makeTrade("sell");
             numTrades++;
         }
-        else if(checkForBullEngulfing()){
+        else if(engulfResult == "bullish"){
             //Print("Bullish Engulfing");
             makeTrade("buy");
             numTrades++;
         }
 
-      }
-      else{
-         // If Trades are open
-         // Check if exit rules match
+    }
 
-      }
 
-   }
+    // Code to be run on every tick
+
+    // If we have some positions open
+    if(openPositions>0){
+        for(int i=0;i<openPositions;i++){
+            Print("PositionGetSymbol(i));.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+        }
+    }
+
+
 }
+
 
 /*
 - - - - - - - - - - - - - - - 
@@ -105,53 +158,62 @@ Strategy code below
 - - - - - - - - - - - - - - - 
 */
 
+/**
+ * Bearish engulfing candle after 4 bullish candles
+ */
+string checkForEngulfing(){
+    double size;
+    double atrSize = getATR();
 
-bool checkForBearEngulfing(){
-    double can1, can2, can3, can4, can5, can2o, can6;
+    double candleClose[7];
+    double candleOpen[7];
+    double candleHigh[7];
+    double candleLow[7];
+    double candleSize[7];
+    int totalCandlesToRead = 4;
+    int totalCandles = totalCandlesToRead + 2;
 
-    can1 = iClose(_Symbol, PERIOD_CURRENT,1);
-    can2 = iClose(_Symbol, PERIOD_CURRENT,2);
-    can2o = iOpen(_Symbol, PERIOD_CURRENT,2);
-    can3 = iClose(_Symbol, PERIOD_CURRENT,3);
-    can4 = iClose(_Symbol, PERIOD_CURRENT,4);
-    can5 = iClose(_Symbol, PERIOD_CURRENT,5);
-    can6 = iClose(_Symbol, PERIOD_CURRENT,6);
+    for(int i=1; i<=totalCandles; i++){
+        candleClose[i] = iClose(_Symbol,PERIOD_CURRENT,i);
+        candleOpen[i] = iOpen(_Symbol,PERIOD_CURRENT,i);
+        candleHigh[i] = iHigh(_Symbol,PERIOD_CURRENT,i);
+        candleLow[i] = iLow(_Symbol,PERIOD_CURRENT,i);
 
-    if(
-        can6<can5 &&
-        can5<can4 &&
-        can4<can3 &&
-        can3<can2 &&
-        can1<can2o 
-    ){
-        return true;
+        size = candleHigh[i] - candleLow[i];
+        if(size<0){
+            size = size * -1;
+        }
+
+        candleSize[i] = size;
     }
 
-    return false;
-}
-
-bool checkForBullEngulfing(){
-    double can1, can2, can3, can4, can5, can2o, can6;
-
-    can1 = iClose(_Symbol, PERIOD_CURRENT,1);
-    can2 = iClose(_Symbol, PERIOD_CURRENT,2);
-    can2o = iOpen(_Symbol, PERIOD_CURRENT,2);
-    can3 = iClose(_Symbol, PERIOD_CURRENT,3);
-    can4 = iClose(_Symbol, PERIOD_CURRENT,4);
-    can5 = iClose(_Symbol, PERIOD_CURRENT,5);
-    can6 = iClose(_Symbol, PERIOD_CURRENT,6);
-
     if(
-        can6>can5 &&
-        can5>can4 &&
-        can4>can3 &&
-        can3>can2 &&
-        can1>can2o 
+        candleSize[5] >= atrSize &&
+        candleSize[4] >= atrSize &&
+        candleSize[3] >= atrSize &&
+        candleSize[2] >= atrSize &&
+        candleSize[1] >= atrSize
     ){
-        return true;
+        if(
+        //    candleClose[6]<candleClose[5] && 
+            candleClose[5]<candleClose[4] && 
+            candleClose[4]<candleClose[3] && 
+            candleClose[3]<candleClose[2] && 
+            candleClose[1]<candleOpen[2] 
+        ){
+            return "bearish";
+        }else if(
+         //   candleClose[6]>candleClose[5] && 
+            candleClose[5]>candleClose[4] && 
+            candleClose[4]>candleClose[3] && 
+            candleClose[3]>candleClose[2] && 
+            candleClose[1]>candleOpen[2] 
+        ){
+            return "bullish";
+        }
     }
 
-    return false;
+    return "-";
 }
 
 double calcBSL(){
@@ -161,16 +223,16 @@ double calcBSL(){
     sizeOfCandle = iHigh(_Symbol, PERIOD_CURRENT, 1) - iLow(_Symbol, PERIOD_CURRENT, 1);
     if(sizeOfCandle>atr2){
         //sl = iClose(_Symbol, PERIOD_CURRENT,1) - (getATR()*1.5);
-        sl = iLow(_Symbol, PERIOD_CURRENT, 1) - getATR();
+        sl = iLow(_Symbol, PERIOD_CURRENT, 1);
     }
     else{
-        sl = iLow(_Symbol, PERIOD_CURRENT, 1) - getATR();
+        sl = iLow(_Symbol, PERIOD_CURRENT, 1);
     }
     return sl;
 }
 
 double calcBTP(){
-    double atr2 = getATR()*2;
+    double atr2 = getATR()*ATRTP;
     double tp;
     tp = iHigh(_Symbol, PERIOD_CURRENT, 1) + atr2;
     return tp;
@@ -183,10 +245,10 @@ double calcSSL(){
     sizeOfCandle = iHigh(_Symbol, PERIOD_CURRENT, 1) - iLow(_Symbol, PERIOD_CURRENT, 1);
     if(sizeOfCandle>atr2){
         //sl = iClose(_Symbol, PERIOD_CURRENT, 1) + (getATR()*1.5);
-        sl = iLow(_Symbol, PERIOD_CURRENT, 1) + getATR();
+        sl = iHigh(_Symbol, PERIOD_CURRENT, 1);
     }
     else{
-        sl = iLow(_Symbol, PERIOD_CURRENT, 1) + getATR();
+        sl = iHigh(_Symbol, PERIOD_CURRENT, 1);
     }
     return sl;
 }
@@ -195,7 +257,7 @@ double calcSSL(){
  * Calculate TP for Sells
  */
 double calcSTP(){
-    double atr2 = getATR()*2;
+    double atr2 = getATR()*ATRTP;
     double tp;
     tp = iLow(_Symbol, PERIOD_CURRENT, 1) - atr2;
     return tp;
