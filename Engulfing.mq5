@@ -10,6 +10,7 @@ double pipValue;
 
 double tppip = 10;
 double slpip = 10;
+int atr = 14;
 
 /* * * * * * * * * * * * * * * * * * * * *
  Service Variables - Only Accessible in code
@@ -17,9 +18,8 @@ double slpip = 10;
 CTrade trade;
 
 double currentBid, currentAsk, currentSpread;
-double emaData[], difference[], differenceSD[];
-int emaHandle;
-int numEma;
+double reqData[], atrReq[];
+
 int numTrades = 0;
 int numOpenTrades = 0;
 
@@ -42,6 +42,7 @@ int OnInit(){
 void OnDeinit(const int reason){
    // Releaee Indicators
    releaseIndicators();
+   Print("Num Trades: " + (string) numTrades);
 }
 
 void OnTick(){
@@ -71,7 +72,18 @@ void OnTick(){
 
         // Print("Spread: " + (string) currentSpread);
         // Print("EMA:" + (string) emaData[1]);
-        //  Print(iClose(_Symbol,PERIOD_CURRENT,1));
+        // Print(iClose(_Symbol,PERIOD_CURRENT,1));
+        
+        Print("ATR: " + (string) atr);
+
+        if(checkForBearEngulfing()){
+            //Print("Bearish Engulfing");
+            numTrades++;
+        }
+        else if(checkForBullEngulfing()){
+            //Print("Bullish Engulfing");
+            numTrades++;
+        }
 
       }
       else{
@@ -79,13 +91,6 @@ void OnTick(){
          // Check if exit rules match
 
       }
-      
-
-
-      
-
-     
-
 
    }
 }
@@ -97,42 +102,106 @@ Strategy code below
 */
 
 
+bool checkForBearEngulfing(){
+    double can1, can2, can3, can4, can5, can2o, can6;
 
+    can1 = iClose(_Symbol, PERIOD_CURRENT,1);
+    can2 = iClose(_Symbol, PERIOD_CURRENT,2);
+    can2o = iOpen(_Symbol, PERIOD_CURRENT,2);
+    can3 = iClose(_Symbol, PERIOD_CURRENT,3);
+    can4 = iClose(_Symbol, PERIOD_CURRENT,4);
+    can5 = iClose(_Symbol, PERIOD_CURRENT,5);
+    can6 = iClose(_Symbol, PERIOD_CURRENT,6);
 
+    if(
+        can6<can5 &&
+        can5<can4 &&
+        can4<can3 &&
+        can3<can2 &&
+        can1<can2o 
+    ){
+        return true;
+    }
 
+    return false;
+}
 
+bool checkForBullEngulfing(){
+    double can1, can2, can3, can4, can5, can2o, can6;
 
+    can1 = iClose(_Symbol, PERIOD_CURRENT,1);
+    can2 = iClose(_Symbol, PERIOD_CURRENT,2);
+    can2o = iOpen(_Symbol, PERIOD_CURRENT,2);
+    can3 = iClose(_Symbol, PERIOD_CURRENT,3);
+    can4 = iClose(_Symbol, PERIOD_CURRENT,4);
+    can5 = iClose(_Symbol, PERIOD_CURRENT,5);
+    can6 = iClose(_Symbol, PERIOD_CURRENT,6);
+
+    if(
+        can5>can4 &&
+        can4>can3 &&
+        can3>can2 &&
+        can1>can2o 
+    ){
+        return true;
+    }
+
+    return false;
+}
+
+void calcBSL(){
+
+}
+
+void calcBTP{
+
+}
+
+double getATR(){
+    double total = 0.0;
+    double result;
+    double size;
+    for(i=1; i<=atr; i++){
+        size = iClose(_Symbol, PERIOD_CURRENT, i) - iOpen(_Symbol, PERIOD_CURRENT, i);
+        if(size<0){
+            size = size * -1;
+        }
+        total = total + size;
+    }
+
+    return total/atr;
+}
 
 
 /*
 - - - - - - - - - - - - - - - 
 Non Strategy code below
 - - - - - - - - - - - - - - - 
+
 */
 
 /**
  * Set all arrays as series
  */
 void setArrayAsSeries(){
-   ArraySetAsSeries(emaData,true);
 }
 
 /**
  * Init Indicators - Called OnInit()
  */
 void initIndicators(){
-   emaHandle = iMA(_Symbol,PERIOD_CURRENT,25,0,MODE_EMA,PRICE_CLOSE);
+   
 }
 
 /**
  * Release Indicators - Called onDeInit()
  */
 void releaseIndicators(){
-   IndicatorRelease(emaHandle);
+   
 }
 
 void copyBuffers(){
-   numEma = CopyBuffer(emaHandle,0,0,11,emaData); 
+   
 }
 
 /**
