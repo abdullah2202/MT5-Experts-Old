@@ -5,21 +5,21 @@
    Input variables - Accessible from MT5
  * * * * * * * * * * * * * * * * * * * * */
 input double lot = 0.5;                            // Lot Size
-input int slpip = 10;                              // Stop Loss Pips
-input int tppip = 25;                              // Take Profit Pips
-input int trailingsl = 25;                         // Trailing SL points
 
 double pipValue;
+
+double tppip = 10;
+double slpip = 10;
 
 /* * * * * * * * * * * * * * * * * * * * *
  Service Variables - Only Accessible in code
  * * * * * * * * * * * * * * * * * * * * */
 CTrade trade;
 
-double currentBid, currentAsk;
-double ema6Data[], sma12Data[];
-int ema6Handle, sma12Handle;
-int numEma6, numSma12;
+double currentBid, currentAsk, currentSpread;
+double emaData[], difference[], differenceSD[];
+int emaHandle;
+int numEma;
 int numTrades = 0;
 int numOpenTrades = 0;
 
@@ -28,13 +28,12 @@ int OnInit(){
    // Print("Init started");
 
    // Set As Series
-   ArraySetAsSeries(ema6Data,true);
-   ArraySetAsSeries(sma12Data,true);
+   ArraySetAsSeries(emaData,true);
 
    // Init Indicators
    initIndicators();
 
-   // Check Digits - Get calue of one Pip
+   // Check Digits - Get value of one Pip
    pipValue = getPipValue();
 
    return(INIT_SUCCEEDED);
@@ -46,37 +45,34 @@ void OnDeinit(const int reason){
 }
 
 void OnTick(){
+   // Sort out Date and Time
    static datetime timestamp;
    datetime time = iTime(_Symbol,PERIOD_CURRENT,0);
    string maCrossover = "none";
 
+   // Get current ASK and BID
    currentAsk = SymbolInfoDouble(_Symbol, SYMBOL_ASK);
    currentBid = SymbolInfoDouble(_Symbol, SYMBOL_BID);
+
+   // Work out current spread
+   currentSpread = (currentBid - currentAsk) / pipValue;
 
    // Copy Buffers
    copyBuffers();
 
    // Copy Data
 
-   // Run this code once per candles
+   // Run this code once per candle
    if(timestamp != time){
       timestamp = time;
 
-      maCrossover = checkMACrossover();
 
       // If no trades are open
       if(numOpenTrades<1){
 
-         // Check if entry rules match
-         if(maCrossover == "buy"){
-            makeTrade("buy");
-         }
-         else if(maCrossover == "sell"){
-            makeTrade("sell");
-         }
-         else{
-
-         }
+         Print("Spread: " + (string) currentSpread);
+         Print("EMA:" + (string) emaData[1]);
+         Print(iClose(_Symbol,PERIOD_CURRENT,1));
 
       }
       else{
@@ -101,56 +97,44 @@ Strategy code below
 - - - - - - - - - - - - - - - 
 */
 
-
-string checkMACrossover(){
-
-   string calc0 = calcFastOverSlow(ema6Data[1],sma12Data[1]);
-   string calc1 = calcFastOverSlow(ema6Data[2],sma12Data[2]);
-   
-   if(calc0=="bear" && calc1=="bull"){
-      numTrades++;
-      Print("- - - - - - - - ");
-      Print("SELL SIGNAL");
-      Print("Num Trades: " + (string) numTrades);
-      Print("- - - - - - - - ");
-      return "sell";
-   }
-
-   else if(calc0=="bull" && calc1=="bear"){
-      numTrades++;
-      Print("- - - - - - - - ");
-      Print("BUY SIGNAL");
-      Print("Num Trades: " + (string) numTrades);
-      Print("- - - - - - - - ");
-      return "buy";
-   }
-
-   else{
-      return "none";
-   }
-   
-   
-//}
+string checkEMABreak(){
+   return "";
 }
 
-// Check Gradients - flat=consolidation
-void checkGradientEma6(){}
-void checkGradientSma12(){}
 
-// Check MACD
-void checkMACDStatus(){}
+/**
+ * 1) get difference between last 2 digits of ema
+ * 2) add this difference to array
+ * 3) If number flips from + to - then Bearish and - to + is bullish
+ * 4) check SD, if increase then strong movement and vice versa
+ * 5) run end of each 1min candle
+ */
 
-/////
 
-string calcFastOverSlow(double fast, double slow){
-   if((fast-slow)>0){
-      return "bull";
-   }
-   else{
-      return "bear";
-   }
+string getGradient(){
+   /**
+    * 1) get last value for ema
+    * 2) add value to end of array
+    * 3) if number of values >0 check difference => getDifference()
+    * 4) add difference to array
+    * 5) return 1 of 5 values depending on previous 2 difference values
+    *    - - => Bearish
+    *    + - => New Bearish
+    *    + + => Bullish
+    *    - + => New Bullish
+    *    0 0 => No Change
+    * 6) work out standard deviation of difference values 
+    */
+   return "";
 }
 
+/**
+ * returns difference between first and second doubles
+ */
+double getDifference(double first, double second){
+   double result = first - second;
+   return result;
+}
 
 
 
@@ -164,29 +148,25 @@ Non Strategy code below
  * Set all arrays as series
  */
 void setArrayAsSeries(){
-   ArraySetAsSeries(ema6Data,true);
-   ArraySetAsSeries(sma12Data,true);
+   ArraySetAsSeries(emaData,true);
 }
 
 /**
  * Init Indicators - Called OnInit()
  */
 void initIndicators(){
-   ema6Handle = iMA(_Symbol,PERIOD_CURRENT,6,0,MODE_EMA,PRICE_CLOSE);
-   sma12Handle = iMA(_Symbol,PERIOD_CURRENT,12,0,MODE_EMA,PRICE_CLOSE);
+   emaHandle = iMA(_Symbol,PERIOD_CURRENT,25,0,MODE_EMA,PRICE_CLOSE);
 }
 
 /**
  * Release Indicators - Called onDeInit()
  */
 void releaseIndicators(){
-   IndicatorRelease(ema6Handle);
-   IndicatorRelease(sma12Handle);
+   IndicatorRelease(emaHandle);
 }
 
 void copyBuffers(){
-   numEma6 = CopyBuffer(ema6Handle,0,0,11,ema6Data); 
-   numSma12 = CopyBuffer(sma12Handle,0,0,11,sma12Data);
+   numEma = CopyBuffer(emaHandle,0,0,11,emaData); 
 }
 
 /**
