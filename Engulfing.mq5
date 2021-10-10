@@ -74,7 +74,7 @@ void OnTick(){
         // Print("EMA:" + (string) emaData[1]);
         // Print(iClose(_Symbol,PERIOD_CURRENT,1));
         
-        Print("ATR: " + (string) atr);
+        Print("ATR: " + (string) getATR());
 
         if(checkForBearEngulfing()){
             //Print("Bearish Engulfing");
@@ -153,15 +153,15 @@ void calcBSL(){
 
 }
 
-void calcBTP{
+void calcBTP(){
 
 }
 
 double getATR(){
     double total = 0.0;
-    double result;
+    double result = 0.0;
     double size;
-    for(i=1; i<=atr; i++){
+    for(int i=1; i<=atr; i++){
         size = iClose(_Symbol, PERIOD_CURRENT, i) - iOpen(_Symbol, PERIOD_CURRENT, i);
         if(size<0){
             size = size * -1;
@@ -169,7 +169,8 @@ double getATR(){
         total = total + size;
     }
 
-    return total/atr;
+    result = total / atr;
+    return result;
 }
 
 
