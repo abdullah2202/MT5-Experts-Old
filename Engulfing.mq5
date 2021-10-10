@@ -162,7 +162,7 @@ double getATR(){
     double result = 0.0;
     double size;
     for(int i=1; i<=atr; i++){
-        size = iClose(_Symbol, PERIOD_CURRENT, i) - iOpen(_Symbol, PERIOD_CURRENT, i);
+        size = iLow(_Symbol, PERIOD_CURRENT, i) - iHigh(_Symbol, PERIOD_CURRENT, i);
         if(size<0){
             size = size * -1;
         }
@@ -170,6 +170,8 @@ double getATR(){
     }
 
     result = total / atr;
+    result = result / pipValue;
+    result = NormalizeDouble(result, 1);
     return result;
 }
 
