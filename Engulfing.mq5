@@ -149,12 +149,49 @@ bool checkForBullEngulfing(){
     return false;
 }
 
-void calcBSL(){
-
+double calcBSL(){
+    double sizeOfCandle;
+    double atr2 = atr*2;
+    double sl;
+    sizeOfCandle = iHigh(_Symbol, PERIOD_CURRENT, 1) - iLow(_Symbol, PERIOD_CURRENT, 1);
+    if(sizeOfCandle>atr2){
+        sl = iClose(_Symbol, PERIOD_CURRENT,1) - (atr*1.5);
+    }
+    else{
+        sl = iLow(_Symbol, PERIOD_CURRENT, 1) - atr;
+    }
+    return sl;
 }
 
 void calcBTP(){
+    double atr2 = atr*2;
+    double tp;
+    tp = iHigh(_Symbol, PERIOD_CURRENT, 1) + atr2;
+    return tp;
+}
 
+double calcSSL(){
+    double sizeOfCandle;
+    double atr2 = atr*2;
+    double sl;
+    sizeOfCandle = iHigh(_Symbol, PERIOD_CURRENT, 1) - iLow(_Symbol, PERIOD_CURRENT, 1);
+    if(sizeOfCandle>atr2){
+        sl = iClose(_Symbol, PERIOD_CURRENT, 1) + (atr*1.5);
+    }
+    else{
+        sl = iLow(_Symbol, PERIOD_CURRENT, 1) + atr;
+    }
+    return sl;
+}
+
+/**
+ * Calculate TP for Sells
+ */
+void calcSTP(){
+    double atr2 = atr*2;
+    double tp;
+    tp = iLow(_Symbol, PERIOD_CURRENT, 1) - atr2;
+    return tp;
 }
 
 double getATR(){
@@ -170,7 +207,7 @@ double getATR(){
     }
 
     result = total / atr;
-    result = result / pipValue;
+    //result = result / pipValue;
     result = NormalizeDouble(result, 1);
     return result;
 }
