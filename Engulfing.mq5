@@ -85,64 +85,10 @@ void OnTick(){
     // If we have some positions open
     if(openPositions>0){
         for(int i=0;i<openPositions;i++){
-            Print("PositionGetSymbol(i));.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+            PositionGetSymbol(i);
+            long pos_ticket = PositionGetInteger(POSITION_TICKET);
+            double price_open = PositionGetDouble(POSITION_PRICE_OPEN);
+            
 
             
         }
