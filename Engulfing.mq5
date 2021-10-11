@@ -11,7 +11,7 @@ double pipValue;
 double tppip = 10;
 double slpip = 10;
 int atr = 14;
-int ATRTP = 1;
+int ATRTP = 2;
 
 /* * * * * * * * * * * * * * * * * * * * *
  Service Variables - Only Accessible in code
@@ -113,10 +113,18 @@ void OnTick(){
             pos_pips = NormalizeDouble(pos_pips, 3);
 
             // Move SL to BE if pips are 10 or more
-            if(pos_pips > 0.099){
+            if(pos_pips > 0.099 && pos_sl!=pos_price_open){
                 // Modify position sl to be
-                
+                bool pos_modify = trade.PositionModify(pos_ticket,pos_price_open,pos_tp);
+                if(pos_modify){
+                    Print("Position: " + (string) pos_ticket + " successfully moved SL to BE");
+                }else{
+                    Print("Error when modifying position sl to be");
+                    Print((string) trade.ResultRetcode());
+                }
             }
+
+            //Print("Ticket: " + (string) pos_ticket);
         }
     }
 
