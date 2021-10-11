@@ -84,13 +84,39 @@ void OnTick(){
 
     // If we have some positions open
     if(openPositions>0){
-        for(int i=0;i<openPositions;i++){
-            PositionGetSymbol(i);
-            long pos_ticket = PositionGetInteger(POSITION_TICKET);
-            double price_open = PositionGetDouble(POSITION_PRICE_OPEN);
-            
 
-            
+        // Iterate through open positions
+        for(int i=0;i<openPositions;i++){
+
+            // Select the position in list of open positions
+            PositionGetSymbol(i);
+
+            // Get relevant data for position
+            long pos_ticket = PositionGetInteger(POSITION_TICKET);
+            double pos_price_open = PositionGetDouble(POSITION_PRICE_OPEN);
+            double pos_sl = PositionGetDouble(POSITION_SL);
+            double pos_tp = PositionGetDouble(POSITION_TP);
+            double pos_price_current = PositionGetDouble(POSITION_PRICE_CURRENT);
+            string pos_type = (string) PositionGetInteger(POSITION_TYPE);
+            double pos_pips = 0.0;
+
+            // Calculate pips in profit
+            // If Buy
+            if(pos_type == "0"){
+                pos_pips = pos_price_current - pos_price_open;
+            } 
+            // If Sells
+            else if(pos_type == "1"){
+                pos_pips = pos_price_open - pos_price_current;
+            }
+
+            pos_pips = NormalizeDouble(pos_pips, 3);
+
+            // Move SL to BE if pips are 10 or more
+            if(pos_pips > 0.099){
+                // Modify position sl to be
+                
+            }
         }
     }
 
