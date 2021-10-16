@@ -1,0 +1,13 @@
+16/10/2021
+- 
+Best result
+
+- trailing_sl = 0.16
+- t_sl_profit = 0.5
+- atr = 12
+- ATRTP = 5
+
+- trailing_sl = 0.19
+- t_sl_profit = 0.44
+- atr = 10
+- ATRTP = 5
